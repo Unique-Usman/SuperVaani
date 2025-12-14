@@ -1,0 +1,158 @@
+# =========================
+# OS Files
+# =========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# =========================
+# Python
+# =========================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Python packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+*.log
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.xml
+*.cover
+*.py,cover
+.cache
+*.faiss
+*.pkl
+embed_library_books.py
+pytest_cache/
+ingest.py
+nosetests.xml
+
+# Django / Flask stuff
+*.sqlite3
+db.sqlite3
+instance/
+*.pyc
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# MyPy & PyBuilder
+.mypy_cache/
+.pyre/
+.pytype/
+target/
+
+# =========================
+# SQL / Database Files
+# =========================
+
+# Database dumps/backups
+*.sql
+*.sql.gz
+*.dump
+*.db
+*.xlsx
+*.sqlite
+*.sqlite3
+*.bak
+
+# Database credentials/configs
+db_credentials.json
+db_config.json
+database.yml
+
+# Tools
+*.db-journal
+*.sqlite-journal
+*.tar.gz
+
+# =========================
+# Node / Next.js / React
+# =========================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+pnpm-lock.yaml
+
+# Build output
+.next/
+out/
+build/
+dist/
+ingest.py
+
+# Environment variables
+.env
+.env.*          # .env.local, .env.development, etc.
+!.env.example   # Allow example env files
+
+# Vercel / Deployment
+.vercel
+
+# Logs
+*.log
+logs/
+*.log*
+npm-debug.log*
+
+# Editor / IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Misc
+*.tmp
+*.temp
+
+# Public/media uploads (if auto-generated)
+public/uploads/
+media/
+staticfiles/
+

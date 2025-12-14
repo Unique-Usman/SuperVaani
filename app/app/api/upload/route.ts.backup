@@ -1,0 +1,151 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+
+const getAuthorizedEmails = (): string[] => {
+  const emailsEnv = process.env.AUTHORIZED_UPLOAD_EMAILS;
+  if (!emailsEnv) {
+    console.warn("AUTHORIZED_UPLOAD_EMAILS not set in environment variables");
+    return [];
+  }
+  return emailsEnv.split(",").map((email) => email.trim().toLowerCase());
+};
+
+export async function GET() {
+  try {
+    console.log("=== GET /api/upload - Authorization Check ===");
+    const session = await auth();
+
+    if (!session || !session.user?.email) {
+      console.log("❌ No session or email found");
+      return NextResponse.json(
+        { authorized: false, reason: "Not authenticated" },
+        { status: 200 },
+      );
+    }
+
+    const authorizedEmails = getAuthorizedEmails();
+    const userEmail = session.user.email.toLowerCase();
+    const isAuthorized = authorizedEmails.includes(userEmail);
+
+    console.log("📧 User Email:", userEmail);
+    console.log("✅ Authorized Emails:", authorizedEmails);
+    console.log("🔐 Is Authorized:", isAuthorized);
+
+    return NextResponse.json({
+      authorized: isAuthorized,
+      email: session.user.email,
+    });
+  } catch (error) {
+    console.error("Authorization check error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session || !session.user?.email) {
+      return NextResponse.json(
+        { error: "Unauthorized - Please sign in" },
+        { status: 401 },
+      );
+    }
+
+    const authorizedEmails = getAuthorizedEmails();
+    const userEmail = session.user.email.toLowerCase();
+
+    if (!authorizedEmails.includes(userEmail)) {
+      console.log(`Unauthorized upload attempt by: ${userEmail}`);
+      return NextResponse.json(
+        { error: "Forbidden - You do not have permission to upload files" },
+        { status: 403 },
+      );
+    }
+
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    const userId = formData.get("user_id") as string;
+
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+
+    if (!file.name.endsWith(".csv")) {
+      return NextResponse.json(
+        { error: "Invalid file type. Only CSV files are allowed" },
+        { status: 400 },
+      );
+    }
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "File size exceeds 10MB limit" },
+        { status: 400 },
+      );
+    }
+
+    const fileName = file.name;
+    const invalidChars = /[<>:"/\\|?*\x00-\x1f]/g;
+    if (invalidChars.test(fileName)) {
+      return NextResponse.json({ error: "Invalid file name" }, { status: 400 });
+    }
+
+    const backendFormData = new FormData();
+    backendFormData.append("file", file);
+    backendFormData.append("user_id", userId || session.user.email);
+
+
+    const backendUrl = "http://localhost";
+
+	console.log(`Uploading file for user: ${userEmail}`);
+	console.log(`Backend URL: ${backendUrl}/api/upload_file`);
+
+	const response = await fetch(`${backendUrl}/api/upload_file`, {
+	  method: "POST",
+	  body: backendFormData,
+	});
+
+    console.log(`Backend response status: ${response.status}`);
+    const contentType = response.headers.get("content-type");
+    console.log(`Backend response content-type: ${contentType}`);
+
+    if (!contentType || !contentType.includes("application/json")) {
+      const textResponse = await response.text();
+      console.error(
+        "Backend returned non-JSON response:",
+        textResponse.substring(0, 500),
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Backend server error. Please check if Flask is running and the /upload_file endpoint exists.",
+        },
+        { status: 502 },
+      );
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Backend upload error:", data);
+      return NextResponse.json(
+        { error: data.error || "Upload failed" },
+        { status: response.status },
+      );
+    }
+
+    console.log(`File uploaded successfully for user: ${userEmail}`);
+    return NextResponse.json(data, { status: 200 });
+  } catch (error) {
+    console.error("Upload error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
